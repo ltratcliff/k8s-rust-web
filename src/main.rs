@@ -7,6 +7,10 @@ use axum::{
     response::Html,
 };
 
+use minijinja::render;
+
+use local_ip_address::local_ip;
+
 #[tokio::main]
 async fn main() {
     // initialize tracing
@@ -16,8 +20,8 @@ async fn main() {
     let app = Router::new()
         // `GET /` goes to `root`
         .route("/", get(root))
-        // `POST /users` goes to `create_user`
-        .route("/env", get(get_env));
+        .route("/health", get(|| async { (StatusCode::OK, "OK") }))
+        .route("/api", get(get_env));
 
     // run our app with hyper, listening globally on port 3000
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
@@ -25,30 +29,52 @@ async fn main() {
 }
 
 
-async fn root() -> (StatusCode, Html<&'static str>) {
+async fn root() -> (StatusCode, Html<String>) {
     tracing::info!("GET /");
-    (StatusCode::OK, Html(&HTML))
-}
-
-async fn get_env() -> (StatusCode, Json<HashMap<String, String>>) {
-    tracing::info!("GET /env");
     env::set_var("HOSTNAME", gethostname::gethostname().to_string_lossy().to_string());
+    let my_local_ip = local_ip().unwrap();
+    env::set_var("LOCAL_IP", my_local_ip.to_string());
     let envs: HashMap<String, String> = env::vars().collect();
-    (StatusCode::OK, Json(envs))
+    let rendered = render!(HTML, envs);
+    
+    (StatusCode::OK, Html(rendered.to_string()))
 }
 
-const HTML: &str = r#"
+async fn get_env() -> Json<HashMap<String, String>> {
+    let envs: HashMap<String, String> = env::vars().collect();
+    Json(envs)
+}
+
+const HTML: &'static str = r#"
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Welcome Webpage</title>
+    <title>Welcome {{envs.HOSTNAME}}</title>
     <!-- Add Bootstrap CSS link -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
 </head>
 <body>
-    <div class="container">
-        <h1>Welcome Enviroment Page!</h1>
-        <a href="/env">Check Enviroment</a>
+    <div class="container text-center">
+        <h1>Welcome to {{envs.HOSTNAME}}</h1>
+    </div>
+    <div>
+        <h2 style="margin:5px">Environment Variables</h2>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Key</th>
+                    <th>Value</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in envs %}
+                <tr>
+                    <td>{{ item }}</td>
+                    <td>{{ envs[item] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 
     <!-- Add Bootstrap JS scripts -->

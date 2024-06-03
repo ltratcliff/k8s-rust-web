@@ -1,0 +1,61 @@
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: Service
+  metadata:
+    creationTimestamp: "2023-10-30T12:58:44Z"
+    labels:
+      component: apiserver
+      provider: kubernetes
+    name: kubernetes
+    namespace: default
+    resourceVersion: "195"
+    uid: 459fe626-d357-405b-a335-a39c6bdcbd50
+  spec:
+    clusterIP: 10.0.0.1
+    clusterIPs:
+    - 10.0.0.1
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - name: https
+      port: 443
+      protocol: TCP
+      targetPort: 443
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    creationTimestamp: "2024-05-28T19:42:17Z"
+    labels:
+      app: rust-env
+    name: rust-env
+    namespace: default
+    resourceVersion: "2748336"
+    uid: 1be3c47c-51e5-449a-a0ee-06e502289118
+  spec:
+    clusterIP: 10.0.240.123
+    clusterIPs:
+    - 10.0.240.123
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - port: 3000
+      protocol: TCP
+      targetPort: 3000
+    selector:
+      app: rust-env
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+kind: List
+metadata:
+  resourceVersion: ""

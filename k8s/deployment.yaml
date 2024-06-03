@@ -38,34 +38,3 @@ spec:
       securityContext: {}
       terminationGracePeriodSeconds: 30
 
----
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    app: rust-env
-  name: rust-env
-  namespace: default
-spec:
-  allocateLoadBalancerNodePorts: true
-  clusterIP: 10.0.145.5
-  clusterIPs:
-  - 10.0.145.5
-  externalTrafficPolicy: Cluster
-  internalTrafficPolicy: Cluster
-  ipFamilies:
-  - IPv4
-  ipFamilyPolicy: SingleStack
-  ports:
-  - nodePort: 31567
-    port: 80
-    protocol: TCP
-    targetPort: 3000
-  selector:
-    app: rust-env
-  sessionAffinity: None
-  type: LoadBalancer
-status:
-  loadBalancer:
-    ingress:
-    - ip: 51.8.47.148

@@ -55,7 +55,7 @@ const HTML: &'static str = r#"
 </head>
 <body>
     <div class="container text-center">
-        <h1>Welcome to {{envs.HOSTNAME}}</h1>
+        <h1>Welcome to <span class="rainbow">{{envs.HOSTNAME}}</span></h1>
     </div>
     <div>
         <h2 style="margin:5px">Environment Variables</h2>
@@ -80,5 +80,19 @@ const HTML: &'static str = r#"
     <!-- Add Bootstrap JS scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+<script>
+    // Rainbow text easing
+    var colors = ['#FF0000', '#FF7F00', '#FFFF00', '#00FF00', '#0000FF', '#4B0082', '#9400D3'];
+    var i = 0;
+    setInterval(function() {
+        document.querySelector('.rainbow').style.color = colors[i];
+        i = (i + 1) % colors.length;
+        document.querySelector('.rainbow').style.transition = 'color 2s';
+        document.querySelector('.rainbow').style.transitionTimingFunction = 'ease';
+        document.querySelector('.rainbow').style.transitionDuration = '2s';
+        document.querySelector('.rainbow').style.transitionDelay = '0s';
+    }, 1000);
+
+</script>
 </html>
 "#;

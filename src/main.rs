@@ -12,6 +12,17 @@ use minijinja::render;
 use local_ip_address::local_ip;
 
 #[tokio::main]
+/// The main entry point for the application.
+///
+/// This function sets up the Axum web server, configures the routes, and starts
+/// the server to listen on port 3000. The server will handle the following routes:
+///
+/// - `GET /`: Renders an HTML page with environment variables.
+/// - `GET /health`: Returns a simple "OK" response.
+/// - `GET /api`: Returns a JSON response with all the environment variables.
+///
+/// The server uses the `tracing` crate for logging, and the `minijinja` crate for
+/// rendering the HTML template.
 async fn main() {
     // initialize tracing
     tracing_subscriber::fmt::init();
@@ -29,6 +40,14 @@ async fn main() {
 }
 
 
+/// Renders the root page of the application.
+///
+/// This function sets the `HOSTNAME` and `LOCAL_IP` environment variables, collects
+/// all the environment variables into a `HashMap`, and then renders an HTML template
+/// using the `minijinja` crate. The rendered HTML is returned with a `StatusCode::OK`.
+///
+/// # Returns
+/// A tuple containing the `StatusCode::OK` and the rendered HTML as a `String`.
 async fn root() -> (StatusCode, Html<String>) {
     tracing::info!("GET /");
     env::set_var("HOSTNAME", gethostname::gethostname().to_string_lossy().to_string());
@@ -40,6 +59,14 @@ async fn root() -> (StatusCode, Html<String>) {
     (StatusCode::OK, Html(rendered.to_string()))
 }
 
+/// Returns a JSON response containing all the environment variables as a HashMap.
+///
+/// This function collects all the environment variables into a HashMap and returns
+/// them as a JSON response. This can be used to retrieve information about the
+/// runtime environment of the application.
+///
+/// # Returns
+/// A JSON response containing a HashMap of all the environment variables.
 async fn get_env() -> Json<HashMap<String, String>> {
     let envs: HashMap<String, String> = env::vars().collect();
     Json(envs)

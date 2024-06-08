@@ -8,7 +8,6 @@ use axum::{
 };
 
 use minijinja::render;
-
 use local_ip_address::local_ip;
 
 #[tokio::main]
@@ -31,7 +30,7 @@ async fn main() {
     let app = Router::new()
         // `GET /` goes to `root`
         .route("/", get(root))
-        .route("/health", get(|| async { (StatusCode::OK, "OK") }))
+        .route("/health", get(get_health))
         .route("/api", get(get_env));
 
     // run our app with hyper, listening globally on port 3000
@@ -68,10 +67,24 @@ async fn root() -> (StatusCode, Html<String>) {
 /// # Returns
 /// A JSON response containing a HashMap of all the environment variables.
 async fn get_env() -> Json<HashMap<String, String>> {
+    tracing::info!("GET /api");
     let envs: HashMap<String, String> = env::vars().collect();
     Json(envs)
 }
 
+
+/// Retrieves the health status of the application.
+///
+/// This function returns the HTTP status code and a static string indicating the health status of the application.
+/// The status code will be `StatusCode::OK` (200) if the application is healthy, and the string will be "OK".
+/// This function is intended to be used for health checks, such as by a load balancer or monitoring system.
+async fn get_health() -> (StatusCode, &'static str) {
+    tracing::info!("GET /health");
+    (StatusCode::OK, "OK")
+}
+
+
+/// The HTML template used by the application.
 const HTML: &'static str = r#"
 <!DOCTYPE html>
 <html>
@@ -83,6 +96,8 @@ const HTML: &'static str = r#"
 <body>
     <div class="container text-center">
         <h1>Welcome to <span class="rainbow">{{envs.HOSTNAME}}</span></h1>
+        <h2 style="margin:5px">Local IP Address</h2>
+        <p>{{envs.LOCAL_IP}}</p>
     </div>
     <div>
         <h2 style="margin:5px">Environment Variables</h2>
@@ -123,3 +138,64 @@ const HTML: &'static str = r#"
 </script>
 </html>
 "#;
+
+
+#[cfg(test)]
+mod tests {
+    use std::io::Bytes;
+    use super::*;
+    use axum::body::Body;
+    use axum::http::{header, Request, StatusCode};
+    use tower::ServiceExt;
+
+    #[tokio::test]
+    async fn test_root() {
+        let app = Router::new().route("/", get(root));
+
+        let response = app
+            .into_service()
+            .oneshot(Request::builder().uri("/").body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(
+            response.headers().get(header::CONTENT_TYPE).unwrap(),
+            "text/html; charset=utf-8"
+        );
+    }
+
+    #[tokio::test]
+    async fn test_get_env() {
+        let app = Router::new().route("/api", get(get_env));
+
+        let response = app
+            .oneshot(Request::builder().uri("/api").body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(
+            response.headers().get(header::CONTENT_TYPE).unwrap(),
+            "application/json"
+        );
+    }
+
+    #[tokio::test]
+    async fn test_get_health() {
+        let app = Router::new().route("/health", get(get_health));
+
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .uri("/health")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+    }
+
+}

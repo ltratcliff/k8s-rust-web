@@ -2,11 +2,10 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: rust-env-ingress
-  namespace: default
 spec:
-  ingressClassName: nginx
   rules:
-  - http:
+  - host: k8s.ltratcliff.com
+    http:
       paths:
         - path: /
           pathType: Exact

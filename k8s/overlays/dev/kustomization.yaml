@@ -1,0 +1,19 @@
+resources:
+  - ../../base
+  - ./namespace.yaml
+
+namespace: dev
+
+images:
+  - name: FILLMEIN
+    newName: ltratcliff.azurecr.io/rust-env
+    newTag: latest
+
+patches:
+  - path: replicas.yaml
+  - path: ingress.yaml
+
+configMapGenerator:
+  - name: mykustom-map
+    envs:
+    - config.properties

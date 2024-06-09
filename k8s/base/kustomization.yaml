@@ -1,0 +1,22 @@
+resources: 
+- deployment.yaml
+- service.yaml
+- ingress.yaml
+
+commonLabels:
+  app: rust-web-env
+
+commonAnnotations:
+  app: mykustom-annontations
+
+namePrefix: kustom-
+
+
+nameSuffix: -v1
+
+
+secretGenerator:
+- name: regcred
+  files:
+    - .dockerconfigjson=secrets/dockerconfig.json
+  type: kubernetes.io/dockerconfigjson

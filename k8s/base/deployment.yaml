@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rust-env
+spec:
+  replicas: 1
+  template:
+    spec:
+      containers:
+      - image: FILLMEIN
+        imagePullPolicy: IfNotPresent
+        name: rust-env
+        ports:
+        - containerPort: 3000
+        envFrom:
+        - configMapRef:
+            name: mykustom-map
+      imagePullSecrets:
+      - name: regcred
+
